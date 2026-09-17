@@ -1,7 +1,7 @@
 import requests
 from urllib3 import Retry
 
-URL = "https://www.roadtestnotification.ca/available-dates/"
+URL = "https://www.roadtestnotify.ca/available-dates/"
 
 retry = Retry(
     total=4,
