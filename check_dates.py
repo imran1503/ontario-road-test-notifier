@@ -1,10 +1,9 @@
 import json
 import requests
-from bs4 import BeautifulSoup
 from urllib3 import Retry
 from requests.adapters import HTTPAdapter
 
-URL = "https://www.roadtestnotify.ca/available-dates/"
+URL = "https://www.roadtestnotify.ca/statistics_data/bookable_dates.json"
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
@@ -44,8 +43,8 @@ MY_LOCATIONS = ["Barrie"]
 MY_LICENSE_TYPES = ["G"]
 
 """
-Fetches the HTML from the URL.
-Retries up to 4 times on server errors, then returns the page text OR requests.exceptions.HTTPError / net error.
+Fetches the JSON from the URL.
+Retries up to 4 times on server errors, then returns the JSON text OR requests.exceptions.HTTPError / net error.
 """
 def fetch_data():
     session = requests.Session()
@@ -66,40 +65,24 @@ def fetch_data():
     response.raise_for_status() 
     return response.text
 
-def parse_dates(html):
-    soup = BeautifulSoup(html, "html.parser")
+def parse_dates(json_text):
+    payload = json.loads(json_text)
+    raw_rows = payload.get("rows", [])
+    
     available = []
-    tables = soup.find_all("table")
-
-    for table in tables:
-        for row in table.find_all("tr"):
-            cols = [col.get_text(strip=True) for col in row.find_all(["td", "th"])]
-            if len(cols) >= 4:
-                if cols[0].lower() in ["location", "centre"]:
-                    continue
-                available.append({
-                    "location": cols[0],
-                    "test_type": cols[1],
-                    "date": cols[2],
-                    "duration": cols[3]
-                })
+    for row in raw_rows:
+        available.append({
+            "location": row.get("testCentre", ""),
+            "test_type": row.get("testType", ""),
+            "date": row.get("availableDateLabel") or row.get("availableDate", ""),
+            "duration": row.get("updatedAtEpochMs", "")
+        })
     return available
 
 def main():
-    html = fetch_data()
+    json_text = fetch_data()
+    all_available = parse_dates(json_text)
     
-    # TEMPORARY DEBUG: Print the raw HTML around the table
-    print("----- RAW HTML SNIPPET -----")
-    start_idx = html.lower().find("<table")
-    if start_idx != -1:
-        print(html[start_idx:start_idx+3000])
-    else:
-        print("No <table> tag found in HTML at all.")
-    print("----------------------------")
-    return
-    
-    # The code below is paused for now
-    all_available = parse_dates(html)
     my_available = [
         row for row in all_available 
         if row["location"] in MY_LOCATIONS and row["test_type"] in MY_LICENSE_TYPES
