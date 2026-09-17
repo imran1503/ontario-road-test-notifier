@@ -31,7 +31,7 @@ ALL_LOCATIONS = [
 ALL_LICENSE_TYPES = ["G2", "G"]
 
 #User configuration: change these to your preferred locations and license types
-MY_LOCATIONS = ["Barrie"]
+MY_LOCATIONS = ["Barrie", "Orillia"]
 MY_LICENSE_TYPES = ["G2"]
 MY_NAME = "Artemis"
 
