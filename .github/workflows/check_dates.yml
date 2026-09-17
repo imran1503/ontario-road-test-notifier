@@ -18,5 +18,8 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install dependencies
+        run: pip install requests urllib3
+
       - name: Run checker
         run: python check_dates.py
