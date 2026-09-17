@@ -1,7 +1,7 @@
 import json
 import requests
 from urllib3 import Retry
-from requests.adapters import HTTPAdapter
+
 
 URL = "https://www.roadtestnotify.ca/statistics_data/bookable_dates.json"
 
