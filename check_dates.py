@@ -1,9 +1,18 @@
+import os
 import json
 import requests
 from urllib3 import Retry
 from requests.adapters import HTTPAdapter
 
+# Try to load .env file for local testing
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 URL = "https://www.roadtestnotify.ca/statistics_data/bookable_dates.json"
+NOTIFIED_FILE = "notified_dates.json"
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
@@ -22,7 +31,7 @@ ALL_LICENSE_TYPES = ["G2", "G"]
 
 #Change these to the locations and test types you want to monitor
 MY_LOCATIONS = ["Barrie"]
-MY_LICENSE_TYPES = ["G"]
+MY_LICENSE_TYPES = ["G2"]
 
 def fetch_data():
     session = requests.Session()
@@ -53,23 +62,112 @@ def parse_dates(json_text):
         })
     return available
 
+def load_notified():
+    if os.path.exists(NOTIFIED_FILE):
+        with open(NOTIFIED_FILE, "r") as f:
+            return json.load(f)
+    return []
+
+def save_notified(notified_list):
+    # Keep only the last 200 entries so the file doesn't grow forever
+    notified_list = notified_list[-200:]
+    with open(NOTIFIED_FILE, "w") as f:
+        json.dump(notified_list, f, indent=2)
+
+def send_email(matches):
+    service_id = os.getenv("EMAILJS_SERVICE_ID")
+    template_id = os.getenv("EMAILJS_TEMPLATE_ID")
+    public_key = os.getenv("EMAILJS_PUBLIC_KEY")
+    private_key = os.getenv("EMAILJS_PRIVATE_KEY")
+
+    if not all([service_id, template_id, public_key]):
+        print("EmailJS credentials not set. Skipping email.")
+        return
+
+    rows_html = ""
+    for match in matches:
+        rows_html += f"""
+        <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">{match['location']}</td>
+            <td style="padding: 8px; border: 1px solid #ddd;"><strong>{match['test_type']}</strong></td>
+            <td style="padding: 8px; border: 1px solid #ddd;">{match['date']}</td>
+        </tr>
+        """
+
+    body_html = f"""
+    <table style="border-collapse: collapse; width: 100%; max-width: 600px; font-family: Arial, sans-serif;">
+        <thead>
+            <tr style="background-color: #f2f2f2;">
+                <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Location</th>
+                <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Type</th>
+                <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {rows_html}
+        </tbody>
+    </table>
+    """
+
+    url = "https://api.emailjs.com/api/v1.0/email/send"
+    headers = { "Content-Type": "application/json" }
+    payload = {
+        "service_id": service_id,
+        "template_id": template_id,
+        "user_id": public_key,
+        "template_params": {
+            "from_name": "Road Test Bot",
+            "user_email": "bot@roadtestnotifier.ca",
+            "user_name": "Driver",
+            "message": body_html
+        }
+    }
+    
+    if private_key:
+        payload["accessToken"] = private_key
+
+    try:
+        response = requests.post(url, json=payload, headers=headers)
+        if response.status_code == 200:
+            print("Email sent successfully via EmailJS!")
+        else:
+            print(f"Failed to send EmailJS. Status: {response.status_code}, Response: {response.text}")
+    except Exception as e:
+        print(f"Failed to send EmailJS: {e}")
+
 def main():
     json_text = fetch_data()
     all_available = parse_dates(json_text)
     
+    # 1. Filter by your locations and license types
     my_available = [
         row for row in all_available 
         if row["location"] in MY_LOCATIONS and row["test_type"] in MY_LICENSE_TYPES
     ]
 
+    # 2. Load the list of appointments we've already emailed about
+    notified = load_notified()
+
+    # 3. Find only the NEW appointments
+    new_matches = []
+    for match in my_available:
+        # Create a unique ID for this specific appointment
+        uid = f"{match['location']}|{match['test_type']}|{match['date']}"
+        if uid not in notified:
+            new_matches.append(match)
+            notified.append(uid)
+
     print(f"Total dates found on site: {len(all_available)}")
     print(f"Dates matching your selected locations: {len(my_available)}")
+    print(f"New dates not previously emailed: {len(new_matches)}")
     print("-----------------------------------------------")
     
-    if not my_available:
-        print("No dates found for your selected locations right now.")
+    if not new_matches:
+        print("No new dates found since last email. Skipping email.")
     else:
-        print(json.dumps(my_available, indent=2))
+        print("Sending email for new dates...")
+        send_email(new_matches)
+        save_notified(notified)
 
 if __name__ == "__main__":
     main()
