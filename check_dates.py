@@ -87,14 +87,19 @@ def parse_dates(html):
 
 def main():
     html = fetch_data()
-    all_available = parse_dates(html)
     
-    # TEMPORARY DEBUG: Print every appointment on the site
-    print("ALL AVAILABLE DATES ON SITE:")
-    print(json.dumps(all_available, indent=2))
+    # TEMPORARY DEBUG: Print the raw HTML around the table
+    print("----- RAW HTML SNIPPET -----")
+    start_idx = html.lower().find("<table")
+    if start_idx != -1:
+        print(html[start_idx:start_idx+3000])
+    else:
+        print("No <table> tag found in HTML at all.")
+    print("----------------------------")
     return
     
     # The code below is paused for now
+    all_available = parse_dates(html)
     my_available = [
         row for row in all_available 
         if row["location"] in MY_LOCATIONS and row["test_type"] in MY_LICENSE_TYPES
