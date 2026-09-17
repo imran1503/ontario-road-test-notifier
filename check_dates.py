@@ -1,6 +1,7 @@
 import json
+import requests
 from urllib3 import Retry
-
+from requests.adapters import HTTPAdapter
 
 URL = "https://www.roadtestnotify.ca/statistics_data/bookable_dates.json"
 
@@ -82,6 +83,12 @@ def main():
     json_text = fetch_data()
     all_available = parse_dates(json_text)
     
+    # TEMPORARY DEBUG: Print every appointment in the JSON
+    print("ALL AVAILABLE DATES ON SITE:")
+    print(json.dumps(all_available, indent=2))
+    return
+    
+    # The filtered code is paused for now
     my_available = [
         row for row in all_available 
         if row["location"] in MY_LOCATIONS and row["test_type"] in MY_LICENSE_TYPES
