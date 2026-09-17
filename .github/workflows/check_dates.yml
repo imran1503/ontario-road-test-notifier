@@ -18,11 +18,8 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install requests
-        run: pip install requests
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4
 
       - name: Run checker
         run: python check_dates.py
-
-      - name: Test
-        run: echo "Road test checker is running"
