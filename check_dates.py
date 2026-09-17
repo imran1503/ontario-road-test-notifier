@@ -19,14 +19,20 @@ HEADERS = {
                   "(KHTML, like Gecko) Chrome/120.0 Safari/537.36"
 }
 
-# Updated with the newest centres seen on the site
+#Complete reference list of all DriveTest centres in Ontario
 ALL_LOCATIONS = [
-    "Arnprior", "Barrie", "Belleville", "Brampton", "Brantford", "Burlington",
-    "Clinton", "Collingwood", "Fort Frances", "Guelph", "Kingston", "Kitchener",
-    "Lindsay", "London", "Mississauga", "Newmarket", "Oakville", "Orangeville",
-    "Oshawa", "Ottawa Walkley", "Renfrew", "Smiths Falls", "St Catharines",
-    "Stratford", "Sudbury", "Toronto Downsview", "Toronto Etobicoke",
-    "Toronto Metro East", "Toronto Port Union", "Walkerton", "Winchester"
+    "Bancroft", "Barrie", "Belleville", "Blind River", "Brampton", "Brantford",
+    "Brockville", "Burlington", "Chatham", "Clinton", "Collingwood", "Cornwall",
+    "Dryden", "Elliot Lake", "Espanola", "Fort Frances", "Guelph", "Hamilton",
+    "Hawkesbury", "Hearst", "Huntsville", "Kapuskasing", "Kenora", "Kingston",
+    "Kirkland Lake", "Kitchener", "Lindsay", "London", "Marathon", "Mississauga",
+    "Moosonee", "New Liskeard", "Newmarket", "North Bay", "Oakville", "Orangeville",
+    "Orillia", "Oshawa", "Ottawa Canotek", "Ottawa Walkley", "Owen Sound",
+    "Parry Sound", "Pembroke", "Peterborough", "Port Hope", "Renfrew", "Sarnia",
+    "Sault Ste Marie", "Simcoe", "Smiths Falls", "St Catharines", "Stratford",
+    "Sudbury", "Thunder Bay", "Tillsonburg", "Timmins", "Toronto Downsview",
+    "Toronto Etobicoke", "Toronto Metro East", "Toronto Port Union", "Walkerton",
+    "Wawa", "Windsor", "Woodstock"
 ]
 ALL_LICENSE_TYPES = ["G2", "G"]
 
@@ -143,13 +149,14 @@ def main():
     
     # Extract every unique location currently on the site
     active_locations = sorted(list(set(row["location"] for row in all_available)))
-    
-    print("=================================================")
-    print("ALL ACTIVE LOCATIONS CURRENTLY ON SITE:")
-    print("=================================================")
-    for loc in active_locations:
-        print(f'    "{loc}",')
-    print("=================================================\n")
+
+    # Uncomment to print every location currently active on the site.
+    # print("=================================================")
+    # print("ALL ACTIVE LOCATIONS CURRENTLY ON SITE:")
+    # print("=================================================")
+    # for loc in active_locations:
+    #     print(f'    "{loc}",')
+    # print("=================================================\n")
 
     # 1. Filter by your locations and license types
     my_available = [
