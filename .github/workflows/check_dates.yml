@@ -32,8 +32,8 @@ jobs:
           EMAILJS_PRIVATE_KEY: ${{ secrets.EMAILJS_PRIVATE_KEY }}
         run: python check_dates.py
 
-            - name: Commit updated notified dates
-        run:
+      - name: Commit updated notified dates
+        run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           if [ -f notified_dates.json ]; then
