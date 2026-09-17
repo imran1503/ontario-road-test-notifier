@@ -19,13 +19,14 @@ HEADERS = {
                   "(KHTML, like Gecko) Chrome/120.0 Safari/537.36"
 }
 
+# Updated with the newest centres seen on the site
 ALL_LOCATIONS = [
-    "Barrie", "Belleville", "Brantford", "Burlington", "Collingwood",
-    "Fort Frances", "Guelph", "Kingston", "Kitchener", "London",
-    "Mississauga", "Newmarket", "Oakville", "Orangeville", "Oshawa",
-    "Ottawa Walkley", "Smiths Falls", "St Catharines", "Stratford",
-    "Sudbury", "Toronto Downsview", "Toronto Etobicoke", "Toronto Port Union",
-    "Walkerton", "Winchester"
+    "Arnprior", "Barrie", "Belleville", "Brampton", "Brantford", "Burlington",
+    "Clinton", "Collingwood", "Fort Frances", "Guelph", "Kingston", "Kitchener",
+    "Lindsay", "London", "Mississauga", "Newmarket", "Oakville", "Orangeville",
+    "Oshawa", "Ottawa Walkley", "Renfrew", "Smiths Falls", "St Catharines",
+    "Stratford", "Sudbury", "Toronto Downsview", "Toronto Etobicoke",
+    "Toronto Metro East", "Toronto Port Union", "Walkerton", "Winchester"
 ]
 ALL_LICENSE_TYPES = ["G2", "G"]
 
@@ -140,6 +141,16 @@ def main():
     json_text = fetch_data()
     all_available = parse_dates(json_text)
     
+    # Extract every unique location currently on the site
+    active_locations = sorted(list(set(row["location"] for row in all_available)))
+    
+    print("=================================================")
+    print("ALL ACTIVE LOCATIONS CURRENTLY ON SITE:")
+    print("=================================================")
+    for loc in active_locations:
+        print(f'    "{loc}",')
+    print("=================================================\n")
+
     # 1. Filter by your locations and license types
     my_available = [
         row for row in all_available 
