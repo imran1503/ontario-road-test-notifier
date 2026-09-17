@@ -34,8 +34,6 @@ MY_LOCATIONS = ["Barrie"]
 MY_LICENSE_TYPES = ["G2"]
 MY_NAME = "Artemis"
 
-
-
 def fetch_data():
     session = requests.Session()
     
@@ -167,6 +165,7 @@ def main():
     
     if not new_matches:
         print("No new dates found since last email. Skipping email.")
+        save_notified(notified)  # Saves the file anyway to prevent GitHub Action errors
     else:
         print("Sending email for new dates...")
         send_email(new_matches)
