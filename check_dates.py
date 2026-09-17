@@ -1,5 +1,4 @@
 import json
-import requests
 from urllib3 import Retry
 
 
