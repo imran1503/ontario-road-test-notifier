@@ -29,9 +29,12 @@ ALL_LOCATIONS = [
 ]
 ALL_LICENSE_TYPES = ["G2", "G"]
 
-#Change these to the locations and test types you want to monitor
+#User configuration: change these to your preferred locations and license types
 MY_LOCATIONS = ["Barrie"]
 MY_LICENSE_TYPES = ["G2"]
+MY_NAME = "Artemis"
+
+
 
 def fetch_data():
     session = requests.Session()
@@ -118,7 +121,7 @@ def send_email(matches):
         "template_params": {
             "from_name": "Road Test Bot",
             "user_email": "bot@roadtestnotifier.ca",
-            "user_name": "Driver",
+            "user_name": MY_NAME,
             "message": body_html
         }
     }
