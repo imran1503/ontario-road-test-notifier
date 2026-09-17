@@ -90,19 +90,19 @@ def main():
     all_available = parse_dates(html)
     
     # Updated this line to filter by BOTH location and license type
-    my_available = [
+    all_available = [
         row for row in all_available 
         if row["location"] in MY_LOCATIONS and row["test_type"] in MY_LICENSE_TYPES
     ]
 
     print(f"Total dates found on site: {len(all_available)}")
-    print(f"Dates matching your hardcoded locations: {len(my_available)}")
+    print(f"Dates matching your hardcoded locations: {len(all_available)}")
     print("-----------------------------------------------")
     
-    if not my_available:
+    if not all_available:
         print("No dates found for your selected locations right now.")
     else:
-        print(json.dumps(my_available, indent=2))
+        print(json.dumps(all_available, indent=2))
 
 if __name__ == "__main__":
     main()
