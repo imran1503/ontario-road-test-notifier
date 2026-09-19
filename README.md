@@ -35,6 +35,6 @@ You need a free [EmailJS](https://www.emailjs.com/) account to send emails.
      <h2>Road Test Appointment Available!</h2>
      <p>Hello {{user_name}},</p>
      <p>The bot found the following appointment(s) matching your criteria:</p>
-     {{message}}
+     {{{message}}}
      <p>Log in to the DriveTest portal to book it before it's gone!</p>
      <p>Best regards,<br>{{from_name}}</p>
