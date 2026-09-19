@@ -1,6 +1,7 @@
 import os
 import json
 import requests
+from datetime import datetime
 from urllib3 import Retry
 from requests.adapters import HTTPAdapter
 
@@ -38,8 +39,40 @@ ALL_LICENSE_TYPES = ["G2", "G"]
 
 #User configuration: change these to your preferred locations and license types
 MY_LOCATIONS = ["Barrie", "Orillia"]
-MY_LICENSE_TYPES = ["G2"]
+MY_LICENSE_TYPES = ["G"]
 MY_NAME = "Artemis"
+MY_APPOINTMENT = "Oct 20 2026" #Please use format like 'Oct 20 2026' or '2026-10-20'."
+
+
+"""
+Returns True if date_str is after cutoff_str; otherwise returns False.
+"""
+def is_after_cutoff(date_str, cutoff_str):
+   
+    # Parse the scraped date 
+    try:
+        date_obj = datetime.strptime(date_str, "%B %d, %Y")
+    except ValueError:
+        print(f"Warning: Could not parse scraped date '{date_str}'")
+        return True # If we can't parse it, treat it as after cutoff (ignore it)
+
+    # Parse the user cutoff date
+    cutoff_obj = None
+    for fmt in ("%b %d %Y", "%B %d, %Y", "%Y-%m-%d"):
+        try:
+            cutoff_obj = datetime.strptime(cutoff_str, fmt)
+            break
+        except ValueError:
+            continue
+            
+    if cutoff_obj is None:
+        print(f"Warning: Could not parse cutoff date '{cutoff_str}'. Please use format like 'Oct 20 2026' or '2026-10-20'.")
+        return False # Default to False (don't ignore) if cutoff is misconfigured
+
+    # Return True if the available date is strictly after the cutoff
+    return date_obj > cutoff_obj
+
+
 
 def fetch_data():
     session = requests.Session()
@@ -56,6 +89,8 @@ def fetch_data():
     response.raise_for_status() 
     return response.text
 
+
+
 def parse_dates(json_text):
     payload = json.loads(json_text)
     raw_rows = payload.get("rows", [])
@@ -70,17 +105,23 @@ def parse_dates(json_text):
         })
     return available
 
+
+
 def load_notified():
     if os.path.exists(NOTIFIED_FILE):
         with open(NOTIFIED_FILE, "r") as f:
             return json.load(f)
     return []
 
+
+
 def save_notified(notified_list):
     # Keep only the last 200 entries so the file doesn't grow forever
     notified_list = notified_list[-200:]
     with open(NOTIFIED_FILE, "w") as f:
         json.dump(notified_list, f, indent=2)
+
+
 
 def send_email(matches):
     service_id = os.getenv("EMAILJS_SERVICE_ID")
@@ -143,6 +184,8 @@ def send_email(matches):
     except Exception as e:
         print(f"Failed to send EmailJS: {e}")
 
+
+
 def main():
     json_text = fetch_data()
     all_available = parse_dates(json_text)
@@ -158,16 +201,18 @@ def main():
     #     print(f'    "{loc}",')
     # print("=================================================\n")
 
-    # 1. Filter by your locations and license types
-    my_available = [
-        row for row in all_available 
-        if row["location"] in MY_LOCATIONS and row["test_type"] in MY_LICENSE_TYPES
-    ]
+    # Filter by your locations and license types, AND check the date cutoff
+    my_available = []
+    for row in all_available:
+        if row["location"] in MY_LOCATIONS and row["test_type"] in MY_LICENSE_TYPES:
+            # Only keep the appointment if it is NOT after the cutoff date
+            if not is_after_cutoff(row["date"], MY_APPOINTMENT):
+                my_available.append(row)
 
-    # 2. Load the list of appointments we've already emailed about
+    # Load the list of appointments we've already emailed about
     notified = load_notified()
 
-    # 3. Find only the NEW appointments
+    # Find only the NEW appointments
     new_matches = []
     for match in my_available:
         # Create a unique ID for this specific appointment
@@ -177,7 +222,7 @@ def main():
             notified.append(uid)
 
     print(f"Total dates found on site: {len(all_available)}")
-    print(f"Dates matching your selected locations: {len(my_available)}")
+    print(f"Dates matching your filters and cutoff date: {len(my_available)}")
     print(f"New dates not previously emailed: {len(new_matches)}")
     print("-----------------------------------------------")
     
