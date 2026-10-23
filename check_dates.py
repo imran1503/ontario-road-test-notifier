@@ -233,6 +233,7 @@ def main():
         print("Sending email for new dates...")
         send_email(new_matches)
         save_notified(notified)
+        
 
 if __name__ == "__main__":
     main()
